@@ -4,7 +4,7 @@ APP="$1"; PORT="$2"
 APP_HOME="$DOKKU_ROOT/$1"
 
 rm -rf "$APP_HOME/assets"
-docker cp "`cat $APP_HOME/CONTAINER`:/app/public/assets" "$APP_HOME"
+docker cp "`cat $APP_HOME/CONTAINER.web.1`:/app/public/assets" "$APP_HOME"
 
 TMP_FILE=`mktemp`
 
