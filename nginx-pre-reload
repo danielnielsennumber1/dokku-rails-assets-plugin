@@ -3,9 +3,12 @@ set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
 APP="$1"; PORT="$2"
 APP_HOME="$DOKKU_ROOT/$1"
 
-rm -rf "$APP_HOME/assets"
+TMP_COMAND='test_content'
+TMP_COMAND=$(docker run -i dokku/$1 sh -c 'test -d /app/public/assets && echo '\'Yes\''')
 
-if [docker run -it dokku/$1 sh -c "test -d /app/public/assets " ]; then
+#if [[ docker run -it dokku/$1 sh -c "test -d /app/public/assets" = 0 ]]; then
+if [[ $TMP_COMAND == 'Yes' ]]; then
+  rm -rf "$APP_HOME/assets"
   docker cp "`cat $APP_HOME/CONTAINER`:/app/public/assets" "$APP_HOME"
 
   TMP_FILE=`mktemp`
