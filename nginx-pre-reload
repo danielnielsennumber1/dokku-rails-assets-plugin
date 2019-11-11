@@ -3,12 +3,17 @@ set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
 APP="$1"; PORT="$2"
 APP_HOME="$DOKKU_ROOT/$1"
 
-rm -rf "$APP_HOME/assets"
-docker cp "`cat $APP_HOME/CONTAINER.web.1`:/app/public/assets" "$APP_HOME"
+TMP_COMAND='test_content'
+TMP_COMAND=$(docker run -i dokku/$1 sh -c 'test -d /app/public/assets && echo '\'Yes\''')
 
-TMP_FILE=`mktemp`
+#if [[ docker run -it dokku/$1 sh -c "test -d /app/public/assets" = 0 ]]; then
+if [[ $TMP_COMAND == 'Yes' ]]; then
+  rm -rf "$APP_HOME/assets"
+  docker cp "`cat $APP_HOME/CONTAINER`:/app/public/assets" "$APP_HOME"
 
-echo "
+  TMP_FILE=`mktemp`
+
+  echo "
   location ~ ^/(assets)/  {
     root $APP_HOME;
     gzip_static on; # to serve pre-gzipped version
@@ -17,5 +22,7 @@ echo "
   }
 " > $TMP_FILE
 
-sed -i "/server {/r $TMP_FILE" $APP_HOME/nginx.conf
-rm $TMP_FILE
+  sed -i "/server {/r $TMP_FILE" $APP_HOME/nginx.conf
+  rm $TMP_FILE
+  echo "$1 Rails Assets Optmized"
+fi
