@@ -9,12 +9,14 @@ TMP_COMAND=$(docker run -i dokku/$1 sh -c 'test -d /app/public/assets && echo '\
 #if [[ docker run -it dokku/$1 sh -c "test -d /app/public/assets" = 0 ]]; then
 if [[ $TMP_COMAND == 'Yes' ]]; then
   rm -rf "$APP_HOME/assets"
+  rm -rf "$APP_HOME/packs"
   docker cp "`cat $APP_HOME/$(ls CONTAINER* | head -n1)`:/app/public/assets" "$APP_HOME"
+  docker cp "`cat $APP_HOME/$(ls CONTAINER* | head -n1)`:/app/public/packs" "$APP_HOME"
 
   TMP_FILE=`mktemp`
 
   echo "
-  location ~ ^/(assets)/  {
+  location ~ ^/(assets|packs)/  {
     root $APP_HOME;
     gzip_static on; # to serve pre-gzipped version
     expires max;
@@ -24,5 +26,6 @@ if [[ $TMP_COMAND == 'Yes' ]]; then
 
   sed -i "/server {/r $TMP_FILE" $APP_HOME/nginx.conf
   rm $TMP_FILE
+ 
   echo "$1 Rails Assets Optmized"
 fi
